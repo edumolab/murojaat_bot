@@ -11,7 +11,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-const adminChatIds = [6392652983, 1483919112];
+const adminChatId = [6392652983];
 
 const keyboard = Keyboard.make(["Murojaat yo'llash"]).reply()
 const Adminkeyboard = Keyboard.make(["Murojaatchilar"]).reply()
@@ -23,9 +23,7 @@ async function forwardToAdmin(ctx) {
 
     try {
         // Forward the message to each admin
-        for (const adminChatId of adminChatIds) {
             await ctx.telegram.forwardMessage(adminChatId, ctx.message.chat.id, ctx.message.message_id);
-        }
     } catch (error) {
         console.error("Error forwarding message to admin:", error);
     }
@@ -68,9 +66,7 @@ const bot = new Telegraf('6788302229:AAH5CnCyaZGLvakxEE2lJnlj1ARjMaXRhEA');
 
 
 bot.start((ctx) => {
-    ctx.replyWithChatAction('typing');
-    for (const adminChatId of adminChatIds) {
-      
+    ctx.replyWithChatAction('typing');      
           if (ctx.message.chat.id === adminChatId) {
         ctx.replyWithHTML('Assalomu alaykum, <b>Admin</b>', Adminkeyboard);
     } else {
@@ -83,10 +79,6 @@ bot.start((ctx) => {
             });
         }, 200);
     }
-    
-    }
-
-
 });
 
 
