@@ -11,10 +11,11 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-const adminChatId = 6156133103;
+const adminChatId= 6392652983;
 
 const keyboard = Keyboard.make(["Murojaat yo'llash"]).reply()
-const Adminkeyboard = Keyboard.make(["Murojaatchilar"]).reply()
+const cancelKeyboard = Keyboard.make(["🚫 Bekor qilish"]).reply()
+const Adminkeyboard = Keyboard.make(["👥 Murojaatchilar", "📣 Ommabiy xabar yuborish"]).reply()
 
 
 
@@ -24,6 +25,7 @@ async function forwardToAdmin(ctx) {
     try {
         // Forward the message to each admin
             await ctx.telegram.forwardMessage(adminChatId, ctx.message.chat.id, ctx.message.message_id);
+        
     } catch (error) {
         console.error("Error forwarding message to admin:", error);
     }
@@ -61,13 +63,14 @@ async function saveToFirestore(ctx) {
 
 
 // Initialize Telegraf bot
-const bot = new Telegraf('6788302229:AAH5CnCyaZGLvakxEE2lJnlj1ARjMaXRhEA');
+const bot = new Telegraf('7146527665:AAH6AmmKPMesyboMCkub0h3PvpMTsUnk6Xg');
 
 
 
 bot.start((ctx) => {
-    ctx.replyWithChatAction('typing');      
-          if (ctx.message.chat.id === adminChatId) {
+    ctx.replyWithChatAction('typing');
+    
+    if (ctx.message.chat.id === adminChatId) {
         ctx.replyWithHTML('Assalomu alaykum, <b>Admin</b>', Adminkeyboard);
     } else {
         setTimeout(async () => {
@@ -79,6 +82,7 @@ bot.start((ctx) => {
             });
         }, 200);
     }
+
 });
 
 
@@ -95,7 +99,7 @@ async function getAllUsers() {
 }
 
 // Modify your bot command to display all users
-bot.hears('Murojaatchilar', async (ctx) => {
+bot.hears('👥 Murojaatchilar', async (ctx) => {
   ctx.reply('Barcha murojaatchilar...');
   
   try {
@@ -120,8 +124,10 @@ bot.hears('Murojaatchilar', async (ctx) => {
 
 
 const murojaatScene = new Scene('murojaatScene')
+const broadcastMessageScene = new Scene('broadcastMessageScene');
 
-murojaatScene.enter(ctx=>ctx.reply('✍️ Murojaatingizni kiriting'))
+
+murojaatScene.enter(ctx=>ctx.reply('✍️ Murojaatingizni kiriting', cancelKeyboard))
 
 
 murojaatScene.on('text', async (ctx)=>{
@@ -129,20 +135,49 @@ murojaatScene.on('text', async (ctx)=>{
     if(!murojaatMatni){
         return ctx.reply('✍️ Murojaatingizni kiriting')
     }
+    else if (ctx.message.text === '🚫 Bekor qilish') {
+        ctx.reply('Murojaatingiz bekor qilindi', keyboard);
+        ctx.scene.leave();
+    }
     else{
         saveToFirestore(ctx)
-        ctx.reply('✅ Murojaatingiz qabul qilindi')
+        ctx.reply(' Murojaatingiz qabul qilindi', keyboard)
         ctx.scene.leave();
     }
 })
 
 
+
+broadcastMessageScene.enter((ctx) => {
+    ctx.reply('Xabaringizni kiriting:');
+});
+
+broadcastMessageScene.on('text', async (ctx) => {
+    const message = ctx.message.text;
+    // Retrieve all users
+    const users = await getAllUsers();
+    // Send a message to each user
+    users.forEach(async (user) => {
+        try {
+            await ctx.telegram.sendMessage(user.user_id, message);
+        } catch (error) {
+            console.error(`Error sending message to user ${user.user_id}:`, error);
+            // You may want to handle errors or rate limiting in a production scenario
+        }
+    });
+    ctx.reply('Xabaringiz yuborildi.');
+    ctx.scene.leave();
+});
+
 // Create a stage and register the scene
-const stage = new Stage([murojaatScene]);
+const stage = new Stage([murojaatScene, broadcastMessageScene]);
 bot.use(session());
 bot.use(stage.middleware());
 
 
 bot.hears("Murojaat yo'llash", (ctx) => ctx.scene.enter('murojaatScene'));
+bot.hears('📣 Ommabiy xabar yuborish', (ctx) => ctx.scene.enter('broadcastMessageScene'));
+
+
 
 bot.launch();
