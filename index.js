@@ -63,7 +63,7 @@ async function saveToFirestore(ctx) {
 
 
 // Initialize Telegraf bot
-const bot = new Telegraf('7146527665:AAH6AmmKPMesyboMCkub0h3PvpMTsUnk6Xg');
+const bot = new Telegraf('6788302229:AAH5CnCyaZGLvakxEE2lJnlj1ARjMaXRhEA');
 
 
 
