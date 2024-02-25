@@ -37,23 +37,22 @@ async function saveToFirestore(ctx) {
 
     // Get the current user data from Firestore
     const userSnapshot = await getDoc(userRef);
-    let ideasArray = [];
+    let ideas;
 
     // If the user document exists, update the ideas array
     if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
-        ideasArray = userData.ideas || [];
+        const userData = userSnapshot.data(); 
     }
 
     // Add the new idea to the ideas array
-    ideasArray.push(ctx.message.text);
+    ideas = ctx.message.text;
 
     // Save the updated data back to Firestore
     await setDoc(userRef, {
         name: first_name || "",
         username: username || "", // In case username is undefined
         user_id: user_id,
-        ideas: ideasArray
+        ideas: ideas
     });
 
     // Forward the user's name and ideas to admin
@@ -107,7 +106,7 @@ bot.hears('👥 Murojaatchilar', async (ctx) => {
     if (users.length > 0) {
       let usersList = "<b>Murojaatchilar ro'yxati:</b>\n\n";
       users.forEach(user => {
-        usersList += `- <b>Ismi:</b> ${user.name || "Noma'lum"}\n <b>Username:</b> @${user.username || "Noma'lum"}\n <b>ID:</b> ${user.user_id}\n\n`;
+        usersList += `- <b>Ismi:</b> ${user.name || "Noma'lum"}\n <b>Username:</b> @${user.username || "Noma'lum"}\n <b>ID:</b> ${user.user_id}\n\n `;
       });
       ctx.replyWithHTML(usersList);
     } else {
