@@ -131,7 +131,7 @@ murojaatScene.on('text', async (ctx)=>{
     }
     else{
         saveToFirestore(ctx)
-        ctx.reply(' Murojaatingiz qabul qilindi')
+        ctx.reply('✅ Murojaatingiz qabul qilindi')
         ctx.scene.leave();
     }
 })
