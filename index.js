@@ -69,8 +69,9 @@ const bot = new Telegraf('6788302229:AAH5CnCyaZGLvakxEE2lJnlj1ARjMaXRhEA');
 
 bot.start((ctx) => {
     ctx.replyWithChatAction('typing');
-    
-    if (ctx.message.chat.id === adminChatId) {
+    for (const adminChatId of adminChatIds) {
+      
+          if (ctx.message.chat.id === adminChatId) {
         ctx.replyWithHTML('Assalomu alaykum, <b>Admin</b>', Adminkeyboard);
     } else {
         setTimeout(async () => {
@@ -82,6 +83,9 @@ bot.start((ctx) => {
             });
         }, 200);
     }
+    
+    }
+
 
 });
 
