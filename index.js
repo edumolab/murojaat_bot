@@ -11,7 +11,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-const adminChatId = 6392652983;
+const adminChatId = 6156133103;
 
 const keyboard = Keyboard.make(["Murojaat yo'llash"]).reply()
 const Adminkeyboard = Keyboard.make(["Murojaatchilar"]).reply()
