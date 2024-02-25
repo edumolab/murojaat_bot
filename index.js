@@ -1,8 +1,8 @@
-const { Telegraf, Scenes, session  } = require('telegraf');
+const {Telegraf, session, Stage, Markup}= require('telegraf')
+const Scene = require ('telegraf/scenes/base')
 const { Keyboard } = require('telegram-keyboard');
 const { getFirestore, doc, getDoc, setDoc, collection, getDocs } = require("firebase/firestore");
 const {db} = require('./users')
-const { WizardScene } = Scenes; // Move this line here
 const express = require('express')
 const app = express();
 const PORT = 4100
@@ -11,33 +11,15 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-const adminChatId = 6156133103;
+const adminChatId = 6392652983;
 
 const keyboard = Keyboard.make(["Murojaat yo'llash"]).reply()
 const Adminkeyboard = Keyboard.make(["Murojaatchilar"]).reply()
 
-// Scene 1: Name Scene
-const nameScene = new WizardScene('nameScene',
-    (ctx) => {
-        ctx.reply("Ism va familiyangizni kiriting:");
-        return ctx.wizard.next();
-    },
-    async (ctx) => {
-        ctx.session.fullName = ctx.message.text;
-        await ctx.reply("Murojaatingizni kiriting:");
-        return ctx.wizard.next();
-    },
-    async (ctx) => {
-        ctx.session.ideas = ctx.message.text;
-        // Save to Firestore
-        await saveToFirestore(ctx, ctx.session);
-        ctx.reply("Murojaatingiz qabul qilindi!");
-        return ctx.scene.leave();
-    }
-);
 
 
-async function forwardToAdmin(ctx, data) {
+
+async function forwardToAdmin(ctx) {
     // Replace ADMIN_CHAT_ID with the chat ID of the admin
 
     try {
@@ -48,8 +30,7 @@ async function forwardToAdmin(ctx, data) {
     }
 }
 
-async function saveToFirestore(ctx, data) {
-    console.log("Session data:", data);
+async function saveToFirestore(ctx) {
     const { id: user_id, first_name, username } = ctx.message.chat;
     const userRef = doc(db, "users", `${user_id}`);
 
@@ -64,7 +45,7 @@ async function saveToFirestore(ctx, data) {
     }
 
     // Add the new idea to the ideas array
-    ideasArray.push(data.ideas);
+    ideasArray.push(ctx.message.text);
 
     // Save the updated data back to Firestore
     await setDoc(userRef, {
@@ -75,33 +56,15 @@ async function saveToFirestore(ctx, data) {
     });
 
     // Forward the user's name and ideas to admin
-    await forwardToAdmin(ctx, data);
+    await forwardToAdmin(ctx);
 }
 
-// Scene 2: Ideas Scene
-const ideasScene = new WizardScene('ideasScene',
-    (ctx) => {
-        ctx.reply("Murojaatingizni kiriting:");
-        return ctx.wizard.next();
-    },
-    async (ctx) => {
-        ctx.session.ideas = ctx.message.text;
-        // Save to Firestore
-        await saveToFirestore(ctx.session);
-        ctx.reply("Ma'lumotlar qabul qilindi!");
-        return ctx.scene.leave();
-    }
-);
-
-// Middleware to handle `/start` command
-const stage = new Scenes.Stage([nameScene, ideasScene]); 
 
 
 // Initialize Telegraf bot
-const bot = new Telegraf('6788302229:AAH5CnCyaZGLvakxEE2lJnlj1ARjMaXRhEA');
+const bot = new Telegraf('7146527665:AAH6AmmKPMesyboMCkub0h3PvpMTsUnk6Xg');
 
-bot.use(session());
-bot.use(stage.middleware());
+
 
 bot.start((ctx) => {
     ctx.replyWithChatAction('typing');
@@ -118,16 +81,8 @@ bot.start((ctx) => {
             });
         }, 200);
     }
-    // Leave the current scene
-    ctx.scene.leave();
-});
 
-// Command handler for "Murojaat yo'llash"
-bot.hears("Murojaat yo'llash", async (ctx) => {
-    // Start the Name Scene
-    ctx.scene.enter('nameScene');
 });
-
 
 
 async function getAllUsers() {
@@ -163,5 +118,34 @@ bot.hears('Murojaatchilar', async (ctx) => {
   }
 });
 
+
+//Scene to request
+
+
+const murojaatScene = new Scene('murojaatScene')
+
+murojaatScene.enter(ctx=>ctx.reply('✍️ Murojaatingizni kiriting'))
+
+
+murojaatScene.on('text', async (ctx)=>{
+    const murojaatMatni = ctx.message.text
+    if(!murojaatMatni){
+        return ctx.reply('✍️ Murojaatingizni kiriting')
+    }
+    else{
+        saveToFirestore(ctx)
+        ctx.reply(' Murojaatingiz qabul qilindi')
+        ctx.scene.leave();
+    }
+})
+
+
+// Create a stage and register the scene
+const stage = new Stage([murojaatScene]);
+bot.use(session());
+bot.use(stage.middleware());
+
+
+bot.hears("Murojaat yo'llash", (ctx) => ctx.scene.enter('murojaatScene'));
 
 bot.launch();
