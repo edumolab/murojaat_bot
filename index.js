@@ -11,8 +11,8 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-const adminChatId= 6392652983;
-
+const adminChatId= 6156133103;
+const backButton = Keyboard.make(["🔙 Ortga qaytish"]).reply()
 const keyboard = Keyboard.make(["Murojaat yo'llash"]).reply()
 const cancelKeyboard = Keyboard.make(["🚫 Bekor qilish"]).reply()
 const Adminkeyboard = Keyboard.make(["👥 Murojaatchilar", "📣 Ommabiy xabar yuborish"]).reply()
@@ -30,6 +30,7 @@ async function forwardToAdmin(ctx) {
         console.error("Error forwarding message to admin:", error);
     }
 }
+
 
 async function saveToFirestore(ctx) {
     const { id: user_id, first_name, username } = ctx.message.chat;
@@ -58,6 +59,8 @@ async function saveToFirestore(ctx) {
     // Forward the user's name and ideas to admin
     await forwardToAdmin(ctx);
 }
+
+
 
 
 
@@ -106,7 +109,7 @@ bot.hears('👥 Murojaatchilar', async (ctx) => {
     if (users.length > 0) {
       let usersList = "<b>Murojaatchilar ro'yxati:</b>\n\n";
       users.forEach(user => {
-        usersList += `- <b>Ismi:</b> ${user.name || "Noma'lum"}\n <b>Username:</b> @${user.username || "Noma'lum"}\n <b>ID:</b> ${user.user_id}\n\n `;
+        usersList += `- <b>Ismi:</b> ${user.name || "Noma'lum"}\n <b>Username:</b> @${user.username || "Noma'lum"}\n <b>ID:</b> ${user.user_id}\n\n`;
       });
       ctx.replyWithHTML(usersList);
     } else {
@@ -148,12 +151,17 @@ murojaatScene.on('text', async (ctx)=>{
 
 
 broadcastMessageScene.enter((ctx) => {
-    ctx.reply('Xabaringizni kiriting:');
+    ctx.reply('Xabaringizni kiriting:', backButton);
 });
 
 broadcastMessageScene.on('text', async (ctx) => {
     const message = ctx.message.text;
-    // Retrieve all users
+    if (message === '🔙 Ortga qaytish') {
+        ctx.reply('Xabar yuborish bekor qilindi', Adminkeyboard);
+        ctx.scene.leave();
+    }
+    else{
+            // Retrieve all users
     const users = await getAllUsers();
     // Send a message to each user
     users.forEach(async (user) => {
@@ -164,8 +172,11 @@ broadcastMessageScene.on('text', async (ctx) => {
             // You may want to handle errors or rate limiting in a production scenario
         }
     });
-    ctx.reply('Xabaringiz yuborildi.');
+    ctx.reply('Xabaringiz yuborildi.', Adminkeyboard);
     ctx.scene.leave();
+
+    }
+
 });
 
 // Create a stage and register the scene
